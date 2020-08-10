@@ -1,1 +1,1 @@
-# go-script
+# undefined-script
