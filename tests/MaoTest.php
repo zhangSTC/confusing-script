@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 
 class MaoTest extends TestCase
 {
+    /**
+     * 抓取目录
+     */
     public function testCatWebDir()
     {
         $mao = new Article();
@@ -26,6 +29,9 @@ class MaoTest extends TestCase
         }
     }
 
+    /**
+     * 抓取文章内容
+     */
     public function testCatWebArticleHtml()
     {
         $content = Util::getStorageFile('mao_dir.txt');
@@ -52,6 +58,9 @@ class MaoTest extends TestCase
         $this->assertTrue(true);
     }
 
+    /**
+     * 解析HTML，存储文章内容至es
+     */
     public function testParseArticle()
     {
         $content = Util::getStorageFile('mao_dir.txt');
