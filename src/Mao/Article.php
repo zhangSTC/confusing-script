@@ -85,10 +85,10 @@ class Article
 
         // 解析标题
         $matches = [];
-        preg_match('/<p.*?class=\'title1\'.*?>(.*?)<\/p>/is', $html, $matches);
+        preg_match('/<title>(.*?)<\/title>/is', $html, $matches);
         $txt['title'] = $matches[1] ?? '';
         // 解析日期
-        preg_match('/<p.*?class=\'date\'.*?>（(.*?)）<\/p>/is', $html, $matches);
+        preg_match('/<title>.*?（(.*?)）<\/title>/is', $html, $matches);
         $txt['date'] = $matches[1] ?? '';
         // 解析说明
         preg_match('/<blockquote><font.*?color=.*?>(.*?)<\/font>/is', $html, $matches);

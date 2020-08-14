@@ -63,30 +63,21 @@ class MaoTest extends TestCase
      */
     public function testParseArticle()
     {
-        $content = Util::getStorageFile('mao_dir.txt');
-        $urls = [];
-        foreach (explode("\n", $content) as $line) {
-            $exp = explode('|', $line);
-            if (count($exp) == 2) {
-                $urls[] = [
-                    'url' => $exp[0],
-                    'title' => $exp[1]
-                ];
-            }
-        }
-        $this->assertFalse(empty($urls));
-
+        $dir = opendir(Util::getStoragePath());
+        $file = readdir($dir);
         $esClient = Util::getEsClient();
         $mao = new Article();
-        foreach ($urls as $idx => $val) {
+        while (false != $file) {
+            if ($file == '.' || $file == '..' || !Util::strEndsWith($file, 'html')) {
+                $file = readdir($dir);
+                continue;
+            }
             try {
-                $file = $idx . '.' . $val['title'] . '.html';
                 $data = $mao->parseArticle($file);
                 if (!empty($data)) {
                     $esClient->index([
                         'index' => 'mao',
                         'type' => 'article',
-                        'id' => $idx,
                         'body' => $data
                     ]);
                 }
@@ -95,7 +86,9 @@ class MaoTest extends TestCase
                 echo $e->getMessage() . "\n";
                 echo 'error: ' . $file . "\n";
             }
+            $file = readdir($dir);
         }
+        closedir($dir);
         $this->assertTrue(true);
     }
 }
