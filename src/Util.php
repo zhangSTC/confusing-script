@@ -15,11 +15,11 @@ use Redis;
  */
 class Util
 {
-    private static ?Redis $redisClient = null;
+    private static $redisClient;
 
-    private static ?Client $httpClient = null;
+    private static $httpClient;
 
-    private static ?EsClient $esClient = null;
+    private static $esClient;
 
     /**
      * 获取存储目录的绝对路径
