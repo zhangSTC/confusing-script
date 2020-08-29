@@ -74,7 +74,7 @@ class Article
      * @param string $fromFile
      * @return array|false
      */
-    function parseArticle(string $fromFile)
+    public function parseArticle(string $fromFile)
     {
         $html = Util::getStorageFile($fromFile);
         if (empty($html)) {
