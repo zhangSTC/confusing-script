@@ -89,6 +89,27 @@ class Dao
     }
 
     /**
+     * 批量查询章节信息
+     *
+     * @param int $start
+     * @param int $limit
+     * @return array
+     */
+    public static function getChapterBatch(int $start = 0, int $limit = 100)
+    {
+        $client = Util::getPdoClient();
+        $stmt = $client->prepare(
+            sprintf(
+                'SELECT * FROM `wangwen_chapter` WHERE `id` > %d LIMIT %d',
+                $start,
+                $limit
+            )
+        );
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * 存储章节基本信息
      *
      * @param int $id
@@ -128,5 +149,24 @@ class Dao
         if (!empty($params)) {
             $saveFunc($params);
         }
+    }
+
+    /**
+     * 存储文本信息至es
+     *
+     * @param string $id
+     * @param array $text
+     * @return array|callable
+     */
+    public static function saveChapterES(string $id, array $text)
+    {
+        return Util::getEsClient()->index(
+            [
+                'id' => $id,
+                'index' => 'wangwen',
+                'type' => 'xbqg',
+                'body' => $text
+            ]
+        );
     }
 }
