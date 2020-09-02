@@ -5,6 +5,8 @@ namespace Confusing;
 use Elasticsearch\Client as EsClient;
 use Elasticsearch\ClientBuilder;
 use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
+use PDO;
 use Redis;
 
 /**
@@ -21,6 +23,8 @@ class Util
 
     private static $esClient;
 
+    private static $pdoClient;
+
     /**
      * 获取存储目录的绝对路径
      *
@@ -32,6 +36,35 @@ class Util
     }
 
     /**
+     * 获取PDO连接
+     *
+     * @param string $host
+     * @param string $db
+     * @param int $port
+     * @param string $user
+     * @param string $password
+     * @return PDO
+     */
+    public static function getPdoClient(
+        string $host = '127.0.0.1',
+        string $db = 'confusing',
+        int $port = 3306,
+        string $user = 'root',
+        string $password = '123456'
+    ): PDO {
+        if (is_null(self::$pdoClient)) {
+            $dsn = sprintf(
+                'mysql:dbname=%s;host=%s;port=%d;charset=utf8mb4',
+                $db,
+                $host,
+                $port
+            );
+            self::$pdoClient = new PDO($dsn, $user, $password);
+        }
+        return self::$pdoClient;
+    }
+
+    /**
      * 获取Redis连接
      *
      * @param string $host
@@ -39,8 +72,11 @@ class Util
      * @param int $timeout
      * @return Redis
      */
-    public static function getRedisClient(string $host = '127.0.0.1', int $port = 6379, int $timeout = 5): Redis
-    {
+    public static function getRedisClient(
+        string $host = '127.0.0.1',
+        int $port = 6379,
+        int $timeout = 5
+    ): Redis {
         if (is_null(self::$redisClient)) {
             self::$redisClient = new Redis();
             self::$redisClient->connect($host, $port, $timeout);
@@ -54,12 +90,15 @@ class Util
      * @param int $timeout
      * @return Client
      */
-    public static function getHttpClient($timeout = 10): Client
+    public static function getHttpClient(int $timeout = 10): Client
     {
         if (is_null(self::$httpClient)) {
-            self::$httpClient = new Client([
-                'timeout' => $timeout,
-            ]);
+            self::$httpClient = new Client(
+                [
+                    RequestOptions::TIMEOUT => $timeout,
+                    RequestOptions::COOKIES => true
+                ]
+            );
         }
         return self::$httpClient;
     }
@@ -70,10 +109,11 @@ class Util
      * @param string[] $hosts
      * @return EsClient
      */
-    public static function getEsClient($hosts = ['127.0.0.1']): EsClient
+    public static function getEsClient(array $hosts = ['127.0.0.1']): EsClient
     {
         if (is_null(self::$esClient)) {
-            self::$esClient = ClientBuilder::create()->setHosts($hosts)->build();
+            self::$esClient = ClientBuilder::create()->setHosts($hosts)->build(
+            );
         }
         return self::$esClient;
     }
@@ -84,11 +124,16 @@ class Util
      * @param string $fileName
      * @param string $data
      * @param int $flags
+     * @return bool
      */
-    public static function putStorageFile(string $fileName, string $data, int $flags = 0)
-    {
+    public static function putStorageFile(
+        string $fileName,
+        string $data,
+        int $flags = 0
+    ) {
         $pathFile = self::getStoragePath() . '/' . trim($fileName, '/');
-        file_put_contents($pathFile, $data, $flags);
+        $ret = file_put_contents($pathFile, $data, $flags);
+        return $ret !== false;
     }
 
     /**
@@ -127,6 +172,11 @@ class Util
      */
     public static function strEndsWith(string $haystack, string $needle): bool
     {
-        return '' === $needle || ('' !== $haystack && 0 === substr_compare($haystack, $needle, -strlen($needle)));
+        return '' === $needle ||
+            ('' !== $haystack && 0 === substr_compare(
+                    $haystack,
+                    $needle,
+                    -strlen($needle)
+                ));
     }
 }

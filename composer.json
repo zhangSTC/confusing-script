@@ -13,11 +13,13 @@
         "ext-redis": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
+        "ext-dom": "*",
+        "ext-pdo": "*",
+        "ext-curl": "*",
         "elasticsearch/elasticsearch": "^7.8",
         "guzzlehttp/guzzle": "^7.0"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^2.16",
         "phpunit/phpunit": "^9.3",
         "fzaninotto/faker": "^1.9"
     },
