@@ -100,7 +100,7 @@ class Dao
         $client = Util::getPdoClient();
         $stmt = $client->prepare(
             sprintf(
-                'SELECT * FROM `wangwen_chapter` WHERE `id` > %d LIMIT %d',
+                'SELECT * FROM `wangwen_chapter` WHERE `id` > %d AND `sync_at` = 0 LIMIT %d',
                 $start,
                 $limit
             )
@@ -168,5 +168,22 @@ class Dao
                 'body' => $text
             ]
         );
+    }
+
+    /**
+     * 更新网文同步时间
+     *
+     * @param int $id
+     * @param int $syncAt
+     */
+    public static function updateChapterSync(int $id, int $syncAt = 0)
+    {
+        if ($syncAt <= 0) {
+            $syncAt = time();
+        }
+        $stmt = Util::getPdoClient()->prepare(
+            'UPDATE `wangwen_chapter` SET `sync_at` = ? WHERE `id` = ?'
+        );
+        $stmt->execute([$syncAt, $id]);
     }
 }

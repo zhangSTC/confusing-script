@@ -7,6 +7,9 @@ use Confusing\Util;
 use DOMDocument;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use Throwable;
+
+use function GuzzleHttp\Promise\unwrap;
 
 /**
  * 新笔趣阁
@@ -168,10 +171,11 @@ class XinBiQuGe
      * 抓取章节内容
      *
      * @param string $uri
-     * @return array|null
-     * @throws Exception | GuzzleException
+     * @return string|null
+     * @throws GuzzleException
+     * @throws Exception
      */
-    public function chapterContent(string $uri): ?array
+    public function chapterContent(string $uri): ?string
     {
         $url = self::BASE_URI . trim($uri, '/');
         $resp = Util::getHttpClient(20)->request('GET', $url);
@@ -182,13 +186,58 @@ class XinBiQuGe
         if (empty($content)) {
             return null;
         }
+        return $this->parseChapterHtml($content);
+    }
 
+    /**
+     * 批量抓取章节内容
+     *
+     * @param array $chapters
+     * @return array|null
+     * @throws Throwable
+     */
+    public function chapterContentBatch(array $chapters): ?array
+    {
+        $client = Util::getHttpClient(20);
+        $promises = [];
+        foreach ($chapters as $ch) {
+            $url = self::BASE_URI . trim($ch['uri'], '/');
+            $promises[$ch['id']] = $client->requestAsync('GET', $url);
+        }
+        $results = unwrap($promises);
+
+        $res = [];
+        foreach ($results as $id => $resp) {
+            if ($resp->getStatusCode() != 200) {
+                continue;
+            }
+            $content = $resp->getBody()->getContents();
+            $res[$id] = $this->parseChapterHtml($content);
+        }
+        return $res;
+    }
+
+    /**
+     * 解析章节正文网页
+     *
+     * @param $html
+     * @return string|null
+     */
+    private function parseChapterHtml($html): ?string
+    {
+        if (empty($html)) {
+            return '';
+        }
         $match = [];
-        preg_match('/<div.*?id="content">(.*?)<\/div>/', $content, $match);
+
+        // 使用正则表达式抓取正文部分
+        preg_match('/<div.*?id="content">(.*?)<\/div>/', $html, $match);
         if (count($match) < 2) {
-            return null;
+            return '';
         }
         $text = $match[1];
+
+        // 替换空格及换行符
         $text = str_replace('&nbsp;', '', $text);
         $lines = [];
         foreach (explode('<br />', $text) as $line) {
@@ -197,6 +246,6 @@ class XinBiQuGe
                 $lines[] = $line;
             }
         }
-        return $lines;
+        return implode("\n", $lines);
     }
 }

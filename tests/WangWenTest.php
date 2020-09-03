@@ -7,6 +7,7 @@ use Confusing\WangWen\XinBiQuGe;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use PHPUnit\Framework\TestCase;
+use Throwable;
 
 class WangWenTest extends TestCase
 {
@@ -78,16 +79,16 @@ class WangWenTest extends TestCase
     {
         $wangWen = new XinBiQuGe();
         $start = 0;
-        $limit = 100;
-        //while (true) {
+        $limit = 20;
+        while (true) {
             // 章节列表
             $chapters = Dao::getChapterBatch($start, $limit);
-            /*if (empty($chapters)) {
+            if (empty($chapters)) {
                 break;
-            }*/
+            }
             // 解析章节内容
             foreach ($chapters as $ch) {
-                //try {
+                try {
                     $text = $wangWen->chapterContent($ch['uri']);
                     Dao::saveChapterES(
                         $ch['book_id'] . '-' . $ch['seq'],
@@ -96,21 +97,61 @@ class WangWenTest extends TestCase
                             'content' => $text
                         ]
                     );
-                    break;
-                //    exit(0);
-                //} catch (GuzzleException | Exception $e) {
-                //    echo sprintf(
-                //        'chapter: %s , error: %s',
-                //        json_encode($ch),
-                //        $e->getTraceAsString()
-                //    );
-                //}
+                    Dao::updateChapterSync($ch['id']);
+                } catch (GuzzleException | Exception $e) {
+                    echo sprintf(
+                        'chapter: %s , error: %s',
+                        json_encode($ch),
+                        $e->getTraceAsString()
+                    );
+                }
             }
-            //if (count($chapters) < $limit) {
-            //    break;
-            //}
-            //$start = end($chapters)['id'];
-        //}
+
+            if (count($chapters) < $limit) {
+                break;
+            }
+            $start = end($chapters)['id'];
+        }
+        $this->assertTrue(true);
+    }
+
+    public function testChapterContentBatch()
+    {
+        $wangWen = new XinBiQuGe();
+        $start = 0;
+        $limit = 5;
+        while (true) {
+            // 章节列表
+            $chapters = Dao::getChapterBatch($start, $limit);
+            if (empty($chapters)) {
+                break;
+            }
+
+            try {
+                $texts = $wangWen->chapterContentBatch($chapters);
+                foreach ($chapters as $ch) {
+                    if (!isset($texts[$ch['id']])) {
+                        continue;
+                    }
+                    $text = $texts[$ch['id']];
+                    Dao::saveChapterES(
+                        $ch['book_id'] . '-' . $ch['seq'],
+                        [
+                            'title' => $ch['title'],
+                            'content' => $text
+                        ]
+                    );
+                    Dao::updateChapterSync($ch['id']);
+                }
+            } catch (Throwable $e) {
+                echo 'error: ' . $e->getTraceAsString() . "\n";
+            }
+
+            if (count($chapters) < $limit) {
+                break;
+            }
+            $start = end($chapters)['id'];
+        }
         $this->assertTrue(true);
     }
 
