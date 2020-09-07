@@ -186,4 +186,21 @@ class Dao
         );
         $stmt->execute([$syncAt, $id]);
     }
+
+    /**
+     * 从ES获取文本信息
+     *
+     * @param string $id
+     * @return array
+     */
+    public static function getChapterES(string $id): array
+    {
+        return Util::getEsClient()->get(
+            [
+                'id' => $id,
+                'index' => 'wangwen',
+                'type' => 'xbqg'
+            ]
+        );
+    }
 }

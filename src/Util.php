@@ -137,6 +137,21 @@ class Util
     }
 
     /**
+     * 创建文件夹
+     *
+     * @param string $dir
+     * @return bool
+     */
+    public static function mkStorageDir(string $dir)
+    {
+        $dirPath = self::getStoragePath() . '/' . trim($dir, '/');
+        if (is_dir($dirPath)) {
+            return true;
+        }
+        return mkdir($dirPath);
+    }
+
+    /**
      * 读取文件
      *
      * @param string $fileName

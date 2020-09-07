@@ -119,7 +119,7 @@ class WangWenTest extends TestCase
     {
         $wangWen = new XinBiQuGe();
         $start = 0;
-        $limit = 5;
+        $limit = 10;
         while (true) {
             // 章节列表
             $chapters = Dao::getChapterBatch($start, $limit);
@@ -157,6 +157,10 @@ class WangWenTest extends TestCase
 
     public function testNothing()
     {
+        $list = (new XinBiQuGe())->searchBookAuthor('极品');
+
+        print_r($list);
+
         $this->assertTrue(true);
     }
 }

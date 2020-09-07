@@ -7,6 +7,7 @@ use Confusing\Util;
 use DOMDocument;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\RequestOptions;
 use Throwable;
 
 use function GuzzleHttp\Promise\unwrap;
@@ -220,10 +221,10 @@ class XinBiQuGe
     /**
      * 解析章节正文网页
      *
-     * @param $html
+     * @param string $html
      * @return string|null
      */
-    private function parseChapterHtml($html): ?string
+    private function parseChapterHtml(string $html): ?string
     {
         if (empty($html)) {
             return '';
@@ -247,5 +248,93 @@ class XinBiQuGe
             }
         }
         return implode("\n", $lines);
+    }
+
+    public function searchBookAuthor(string $keyword): ?array
+    {
+        if (empty($keyword)) {
+            return null;
+        }
+
+        $url = self::BASE_URI . 'search.php';
+        $resp = Util::getHttpClient(20)->request(
+            'GET',
+            $url,
+            [
+                RequestOptions::QUERY => [
+                    'keyword' => $keyword
+                ]
+            ]
+        );
+        $html = $resp->getBody()->getContents();
+        if (empty($html)) {
+            return null;
+        }
+
+        $dom = new DOMDocument();
+        $dom->loadHTML($html);
+        $list = [];
+
+        // 搜索结果列表
+        $targetTag = 'div';
+        $targetClass = 'result-game-item-detail';
+        $nodeList = $dom->getElementsByTagName($targetTag);
+        foreach (
+            DOMDocumentHelp::getNodesByClass($nodeList, $targetClass) as $node
+        ) {
+            // 标题
+            $titleNode = DOMDocumentHelp::getFirstNodeByClass(
+                $node->childNodes,
+                'result-game-item-title'
+            );
+            if (empty($titleNode)) {
+                continue;
+            }
+            $title = str_replace(' ', '', trim($titleNode->textContent));
+
+            // 链接
+            $href = DOMDocumentHelp::getFirstNodeByName(
+                $titleNode->childNodes,
+                'a'
+            )->attributes->getNamedItem('href')->textContent;
+
+            // 简介
+            $descNode = DOMDocumentHelp::getFirstNodeByClass(
+                $node->childNodes,
+                'result-game-item-desc'
+            );
+            if (empty($descNode)) {
+                continue;
+            }
+            $desc = str_replace(' ', '', trim($descNode->textContent));
+
+            // 其它信息
+            $info = [];
+            $infoNodes = DOMDocumentHelp::getFirstNodeByClass(
+                $node->childNodes,
+                'result-game-item-info'
+            );
+            if (empty($infoNodes)) {
+                continue;
+            }
+            foreach (
+                DOMDocumentHelp::getNodesByClass(
+                    $infoNodes->childNodes,
+                    'result-game-item-info-tag'
+                ) as $infoTagNode
+            ) {
+                $infoTag = trim($infoTagNode->textContent);
+                $infoTag = str_replace("\n", '', $infoTag);
+                $info[] = str_replace(' ', '', $infoTag);
+            }
+
+            $list[] = [
+                'title' => $title,
+                'href' => $href,
+                'desc' => $desc,
+                'info' => $info
+            ];
+        }
+        return $list;
     }
 }
