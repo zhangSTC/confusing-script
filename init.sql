@@ -7,7 +7,7 @@ CREATE TABLE `wangwen_book`
     `intro`      varchar(600)     NOT NULL DEFAULT '' COMMENT '简介',
     `status`     tinyint unsigned NOT NULL DEFAULT 0 COMMENT '状态: 1-连载中, 2-已完结',
     `chapter`    int unsigned     NOT NULL DEFAULT 0 COMMENT '章节总数',
-    `uri`        varchar(255)     NOT NULL DEFAULT '' COMMENT '网页uri',
+    `uri`        varchar(100)     NOT NULL DEFAULT '' COMMENT '网页uri',
     `created_at` timestamp        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` timestamp        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`)

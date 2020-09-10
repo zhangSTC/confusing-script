@@ -72,11 +72,8 @@ class Util
      * @param int $timeout
      * @return Redis
      */
-    public static function getRedisClient(
-        string $host = '127.0.0.1',
-        int $port = 6379,
-        int $timeout = 5
-    ): Redis {
+    public static function getRedisClient(string $host = '127.0.0.1', int $port = 6379, int $timeout = 5): Redis
+    {
         if (is_null(self::$redisClient)) {
             self::$redisClient = new Redis();
             self::$redisClient->connect($host, $port, $timeout);
@@ -95,8 +92,7 @@ class Util
         if (is_null(self::$httpClient)) {
             self::$httpClient = new Client(
                 [
-                    RequestOptions::TIMEOUT => $timeout,
-                    RequestOptions::COOKIES => true
+                    RequestOptions::TIMEOUT => $timeout
                 ]
             );
         }
@@ -112,8 +108,7 @@ class Util
     public static function getEsClient(array $hosts = ['127.0.0.1']): EsClient
     {
         if (is_null(self::$esClient)) {
-            self::$esClient = ClientBuilder::create()->setHosts($hosts)->build(
-            );
+            self::$esClient = ClientBuilder::create()->setHosts($hosts)->build();
         }
         return self::$esClient;
     }
@@ -126,11 +121,8 @@ class Util
      * @param int $flags
      * @return bool
      */
-    public static function putStorageFile(
-        string $fileName,
-        string $data,
-        int $flags = 0
-    ) {
+    public static function putStorageFile(string $fileName, string $data, int $flags = 0)
+    {
         $pathFile = self::getStoragePath() . '/' . trim($fileName, '/');
         $ret = file_put_contents($pathFile, $data, $flags);
         return $ret !== false;
